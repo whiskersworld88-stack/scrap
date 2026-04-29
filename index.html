@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPJS LASIK Bot Controller</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: "🤖";
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status Panel */
+        .status-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .status-value {
+            color: #333;
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        .status-value.success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-value.failed {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 15px;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Log Console */
+        .log-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            animation: fadeIn 0.3s;
+        }
+
+        .log-entry.info {
+            color: #4fc3f7;
+        }
+
+        .log-entry.success {
+            color: #81c784;
+            background: rgba(129,199,132,0.1);
+        }
+
+        .log-entry.warning {
+            color: #ffb74d;
+        }
+
+        .log-entry.error {
+            color: #e57373;
+            background: rgba(229,115,115,0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* File Info */
+        .file-info {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BPJS LASIK Bot Controller</h1>
+            <div class="subtitle">Otomatisasi Pengecekan Saldo JHT dan Status JMO</div>
+        </div>
+
+        <div class="grid">
+            <!-- Left Panel - Control -->
+            <div class="card">
+                <h2>🎮 Kontrol Bot</h2>
+                
+                <div class="form-group">
+                    <label>📁 File Excel (Input Data)</label>
+                    <input type="file" id="excelFile" accept=".xlsx, .xls">
+                    <div id="fileInfo" class="file-info" style="display: none;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>🔧 Action</label>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="openChromeBtn">
+                            🚀 Buka Chrome + Login
+                        </button>
+                        <button class="btn btn-success" id="startBotBtn" disabled>
+                            ▶️ Start Bot
+                        </button>
+                        <button class="btn btn-danger" id="stopBotBtn" disabled>
+                            ⏹️ Stop Bot
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCount">0</div>
+                        <div class="stat-label">Total Diproses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="successCount">0</div>
+                        <div class="stat-label">✅ Sukses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="failedCount">0</div>
+                        <div class="stat-label">❌ Gagal</div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progress:</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                    </div>
+                </div>
+
+                <div class="status-panel">
+                    <div class="status-item">
+                        <span class="status-label">🤖 Status Bot:</span>
+                        <span class="status-value" id="botStatus">● Tidak Aktif</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">📊 Proses Saat Ini:</span>
+                        <span class="status-value" id="currentProcess">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">💾 File Output:</span>
+                        <span class="status-value" id="outputFile">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Log Console -->
+            <div class="card">
+                <h2>📋 Log Console</h2>
+                <div class="log-container" id="logContainer">
+                    <div class="log-entry info">[INFO] Siap memulai...</div>
+                    <div class="log-entry info">[INFO] Buka Chrome terlebih dahulu menggunakan tombol di samping</div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-warning" id="clearLogBtn" style="flex: none; padding: 8px 15px;">
+                        🗑️ Clear Log
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let isBotRunning = false;
+        let selectedFile = null;
+        let totalRows = 0;
+        let currentRow = 0;
+        let lastResponse = null;
+
+        // DOM Elements
+        const excelFileInput = document.getElementById('excelFile');
+        const fileInfoDiv = document.getElementById('fileInfo');
+        const openChromeBtn = document.getElementById('openChromeBtn');
+        const startBotBtn = document.getElementById('startBotBtn');
+        const stopBotBtn = document.getElementById('stopBotBtn');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+        const totalCountSpan = document.getElementById('totalCount');
+        const successCountSpan = document.getElementById('successCount');
+        const failedCountSpan = document.getElementById('failedCount');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const botStatusSpan = document.getElementById('botStatus');
+        const currentProcessSpan = document.getElementById('currentProcess');
+        const outputFileSpan = document.getElementById('outputFile');
+        const logContainer = document.getElementById('logContainer');
+
+        // Helper: Add log entry
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Helper: Clear log
+        function clearLog() {
+            logContainer.innerHTML = '';
+            addLog('Log dibersihkan', 'info');
+        }
+
+        // Helper: Update stats display
+        function updateStats(success, failed, total) {
+            successCountSpan.textContent = success;
+            failedCountSpan.textContent = failed;
+            totalCountSpan.textContent = total;
+            
+            const percent = total > 0 ? Math.round((success + failed) / total * 100) : 0;
+            progressFill.style.width = `${percent}%`;
+            progressFill.textContent = `${percent}%`;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        // Helper: Update bot status
+        function updateBotStatus(status, isActive) {
+            botStatusSpan.textContent = status;
+            botStatusSpan.style.color = isActive ? '#28a745' : '#dc3545';
+            if (!isActive) {
+                botStatusSpan.innerHTML = '● Tidak Aktif';
+            } else {
+                botStatusSpan.innerHTML = '● Aktif';
+            }
+        }
+
+        // API calls to backend (assuming backend runs on localhost:5000)
+        const API_BASE = 'http://localhost:5000/api';
+
+        async function callApi(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                addLog(`API Error: ${error.message}`, 'error');
+                return { success: false, message: error.message };
+            }
+        }
+
+        // Handle file selection
+        excelFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            selectedFile = file;
+            
+            // Send file to backend
+            const formData = new FormData();
+            formData.append('excelFile', file);
+            
+            try {
+                addLog(`📁 Mengupload file: ${file.name}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    totalRows = result.totalRows || 0;
+                    totalCountSpan.textContent = totalRows;
+                    fileInfoDiv.style.display = 'block';
+                    fileInfoDiv.innerHTML = `✅ File: ${file.name}<br>📊 Total Data: ${totalRows} baris<br>📁 Path: ${result.filePath}`;
+                    addLog(`✅ File berhasil diupload: ${totalRows} data ditemukan`, 'success');
+                    startBotBtn.disabled = false;
+                } else {
+                    addLog(`❌ Upload gagal: ${result.message}`, 'error');
+                    fileInfoDiv.style.display = 'none';
+                }
+            } catch (error) {
+                addLog(`❌ Error upload: ${error.message}`, 'error');
+                fileInfoDiv.style.display = 'none';
+            }
+        });
+
+        // Open Chrome
+        openChromeBtn.addEventListener('click', async () => {
+            addLog('🚀 Membuka Chrome dengan debugging port...', 'info');
+            openChromeBtn.disabled = true;
+            openChromeBtn.textContent = '⏳ Membuka Chrome...';
+            
+            const result = await callApi('/open-chrome', 'POST');
+            
+            if (result.success) {
+                addLog('✅ Chrome berhasil dibuka! Silakan login ke BPJS', 'success');
+                addLog('ℹ️ Setelah login, klik "Start Bot" untuk memulai', 'info');
+            } else {
+                addLog(`❌ Gagal membuka Chrome: ${result.message}`, 'error');
+            }
+            
+            openChromeBtn.disabled = false;
+            openChromeBtn.textContent = '🚀 Buka Chrome + Login';
+        });
+
+        // Start Bot
+        startBotBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                addLog('❌ Pilih file Excel terlebih dahulu!', 'error');
+                return;
+            }
+            
+            addLog('▶️ Memulai bot...', 'info');
+            startBotBtn.disabled = true;
+            stopBotBtn.disabled = false;
+            updateBotStatus('Berjalan...', true);
+            isBotRunning = true;
+            
+            // Reset counters
+            currentRow = 0;
+            updateStats(0, 0, totalRows);
+            
+            // Start polling for status
+            startStatusPolling();
+            
+            const result = await callApi('/start-bot', 'POST');
+            
+            if (!result.success) {
+                addLog(`❌ Gagal memulai bot: ${result.message}`, 'error');
+                startBotBtn.disabled = false;
+                stopBotBtn.disabled = true;
+                updateBotStatus('Error', false);
+                isBotRunning = false;
+            }
+        });
+
+        // Stop Bot
+        stopBotBtn.addEventListener('click', async () => {
+            addLog('⏹️ Menghentikan bot...', 'warning');
+            
+            const result = await callApi('/stop-bot', 'POST');
+            
+            if (result.success) {
+                addLog('✅ Bot dihentikan', 'success');
+            } else {
+                addLog(`⚠️ Gagal menghentikan: ${result.message}`, 'warning');
+            }
+            
+            startBotBtn.disabled = false;
+            stopBotBtn.disabled = true;
+            updateBotStatus('Berhenti', false);
+            isBotRunning = false;
+        });
+
+        // Clear Log
+        clearLogBtn.addEventListener('click', clearLog);
+
+        // Polling for bot status updates
+        let pollingInterval = null;
+        
+        function startStatusPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            
+            pollingInterval = setInterval(async () => {
+                if (!isBotRunning) {
+                    if (pollingInterval) clearInterval(pollingInterval);
+                    return;
+                }
+                
+                const result = await callApi('/status', 'GET');
+                
+                if (result.success) {
+                    // Update progress
+                    if (result.currentRow && result.totalRows) {
+                        currentRow = result.currentRow;
+                        const percent = Math.round((result.currentRow / result.totalRows) * 100);
+                        progressFill.style.width = `${percent}%`;
+                        progressFill.textContent = `${percent}%`;
+                        progressPercent.textContent = `${percent}%`;
+                        
+                        if (result.currentNIK) {
+                            currentProcessSpan.textContent = `Processing: ${result.currentNIK} (${result.currentRow}/${result.totalRows})`;
+                        } else {
+                            currentProcessSpan.textContent = `Row ${result.currentRow}/${result.totalRows}`;
+                        }
+                    }
+                    
+                    // Update counters
+                    if (result.successCount !== undefined) {
+                        updateStats(result.successCount, result.failedCount, result.totalRows || totalRows);
+                    }
+                    
+                    // Update output file
+                    if (result.outputFile) {
+                        outputFileSpan.textContent = result.outputFile.split('\\').pop();
+                    }
+                    
+                    // Add any new logs
+                    if (result.lastLog && result.lastLog !== lastResponse?.lastLog) {
+                        addLog(result.lastLog, result.lastLogType || 'info');
+                    }
+                    
+                    lastResponse = result;
+                    
+                    // Check if bot finished
+                    if (result.isFinished) {
+                        addLog('🎉 Bot selesai menjalankan semua data!', 'success');
+                        addLog(`📊 Ringkasan: ${result.successCount} sukses, ${result.failedCount} gagal`, 'info');
+                        startBotBtn.disabled = false;
+                        stopBotBtn.disabled = true;
+                        updateBotStatus('Selesai', false);
+                        isBotRunning = false;
+                        if (pollingInterval) clearInterval(pollingInterval);
+                    }
+                }
+            }, 1000);
+        }
+
+        // Helper function to simulate backend (for demo without actual backend)
+        // This will be replaced by actual backend calls
+        function setupDemoMode() {
+            addLog('ℹ️ Mode Demo - Menghubungkan ke backend...', 'info');
+            addLog('ℹ️ Pastikan backend berjalan di http://localhost:5000', 'info');
+        }
+
+        // Initialize
+        setupDemoMode();
+        
+        // Add keyboard shortcut to stop bot (Ctrl+Shift+S)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                if (stopBotBtn.disabled === false) {
+                    stopBotBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
